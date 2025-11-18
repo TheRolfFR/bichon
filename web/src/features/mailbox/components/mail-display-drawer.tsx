@@ -1,0 +1,53 @@
+//
+// Copyright (c) 2025 rustmailer.com (https://rustmailer.com)
+//
+// This file is part of the Bichon Email Archiving Project
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+import {
+  Sheet,
+  SheetContent
+} from '@/components/ui/sheet'
+import { useMailboxContext } from '../context'
+import { MailMessageView } from './mail-message-view'
+import { ScrollArea } from '@/components/ui/scroll-area'
+
+
+interface Props {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function MailDisplayDrawer({ open, onOpenChange }: Props) {
+  const { currentEnvelope } = useMailboxContext();
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="md:w-[80rem] h-full p-0">
+        <ScrollArea>
+          <div className='m-5'>
+            {currentEnvelope ? (
+              <MailMessageView envelope={currentEnvelope} />
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">No message selected</div>
+            )}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+}

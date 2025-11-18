@@ -1,0 +1,148 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+      --background: 271 54% 99%;
+      --foreground: 271 56% 5%;
+      --muted: 91 11% 91%;
+      --muted-foreground: 91 13% 31%;
+      --popover: 271 54% 99%;
+      --popover-foreground: 271 56% 5%;
+      --card: 271 54% 98%;
+      --card-foreground: 271 56% 4%;
+      --border: 271 14% 89%;
+      --input: 271 14% 89%;
+      --primary: 271 60% 66%;
+      --primary-foreground: 0 0% 0%;
+      --secondary: 91 60% 66%;
+      --secondary-foreground: 91 60% 6%;
+      --accent: 91 60% 66%;
+      --accent-foreground: 91 60% 6%;
+      --destructive: 17 89% 44%;
+      --destructive-foreground: 0 0% 100%;
+      --ring: 271 60% 66%;
+      --chart-1: 271 60% 66%;
+      --chart-2: 91 60% 66%;
+      --chart-3: 91 60% 66%;
+      --chart-4: 91 60% 69%;
+      --chart-5: 271 63% 66%;
+      --radius: 0.5rem;
+
+      /* Sidebar */
+      --sidebar-background: 271 54% 99%;
+      --sidebar-foreground: 271 56% 5%;
+      --sidebar-primary: 271 60% 66%;
+      --sidebar-primary-foreground: 0 0% 0%;
+      --sidebar-accent: 91 60% 66%;
+      --sidebar-accent-foreground: 91 60% 6%;
+      --sidebar-border: 271 14% 89%;
+      --sidebar-ring: 271 60% 66%;
+  }
+
+  .dark {
+      --background: 271 46% 3%;
+      --foreground: 271 10% 99%;
+      --muted: 91 11% 9%;
+      --muted-foreground: 91 13% 69%;
+      --popover: 271 46% 3%;
+      --popover-foreground: 271 10% 99%;
+      --card: 271 46% 4%;
+      --card-foreground: 0 0% 100%;
+      --border: 271 14% 14%;
+      --input: 271 14% 14%;
+      --primary: 271 60% 66%;
+      --primary-foreground: 0 0% 0%;
+      --secondary: 91 60% 66%;
+      --secondary-foreground: 91 60% 6%;
+      --accent: 91 60% 66%;
+      --accent-foreground: 91 60% 6%;
+      --destructive: 17 89% 52%;
+      --destructive-foreground: 0 0% 100%;
+      --ring: 271 60% 66%;
+      --chart-1: 271 60% 66%;
+      --chart-2: 91 60% 66%;
+      --chart-3: 91 60% 66%;
+      --chart-4: 91 60% 69%;
+      --chart-5: 271 63% 66%;
+
+      /* Sidebar */
+      --sidebar-background: 271 46% 3%;
+      --sidebar-foreground: 271 10% 99%;
+      --sidebar-primary: 271 60% 66%;
+      --sidebar-primary-foreground: 0 0% 0%;
+      --sidebar-accent: 91 60% 66%;
+      --sidebar-accent-foreground: 91 60% 6%;
+      --sidebar-border: 271 14% 14%;
+      --sidebar-ring: 271 60% 66%;
+  }
+  
+
+  /* styles.css */
+  .CollapsibleContent {
+    overflow: hidden;
+  }
+  .CollapsibleContent[data-state='open'] {
+    animation: slideDown 300ms ease-out;
+  }
+  .CollapsibleContent[data-state='closed'] {
+    animation: slideUp 300ms ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-collapsible-content-height);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      height: var(--radix-collapsible-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  /* Prevent focus zoom on mobile devices */
+  @media screen and (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .faded-bottom {
+    @apply after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:hidden after:h-32 after:w-full after:bg-[linear-gradient(180deg,_transparent_10%,_hsl(var(--background))_70%)] after:md:block;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply overflow-x-hidden;
+  }
+  body {
+    @apply min-h-svh w-full bg-background text-foreground;
+  }
+}

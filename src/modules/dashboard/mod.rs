@@ -1,0 +1,109 @@
+//
+// Copyright (c) 2025 rustmailer.com (https://rustmailer.com)
+//
+// This file is part of the Bichon Email Archiving Project
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+use poem_openapi::Object;
+use serde::{Deserialize, Serialize};
+use tantivy::{schema::Value, TantivyDocument};
+
+use crate::{
+    modules::{
+        account::migration::AccountModel,
+        error::{code::ErrorCode, BichonResult},
+        indexer::{manager::ENVELOPE_INDEX_MANAGER, schema::SchemaTools},
+        settings::dir::DATA_DIR_MANAGER,
+        utils::get_total_size,
+    },
+    raise_error,
+};
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize, Object)]
+pub struct DashboardStats {
+    pub account_count: usize,                  // Number of accounts
+    pub email_count: u64,                      // Total number of emails
+    pub total_size_bytes: u64,                 // Total size of all emails (in bytes)
+    pub storage_usage_bytes: u64,              // Actual storage used (in bytes)
+    pub index_usage_bytes: u64,                // Index storage size (in bytes)
+    pub recent_activity: Vec<TimeBucket>,      // Email activity over recent days
+    pub top_senders: Vec<Group>,               // Top 10 senders
+    pub top_accounts: Vec<Group>,              // Top 10 accounts
+    pub with_attachment_count: u64,            // Emails with attachments
+    pub without_attachment_count: u64,         // Emails without attachments
+    pub top_largest_emails: Vec<LargestEmail>, // Top 10 largest emails
+}
+
+impl DashboardStats {
+    pub async fn get() -> BichonResult<Self> {
+        let mut stat = ENVELOPE_INDEX_MANAGER.get_dashboard_stats().await?;
+        stat.top_largest_emails = ENVELOPE_INDEX_MANAGER.top_10_largest_emails().await?;
+        stat.email_count = ENVELOPE_INDEX_MANAGER.total_emails()?;
+        stat.account_count = AccountModel::count().await?;
+        stat.storage_usage_bytes = get_total_size(&DATA_DIR_MANAGER.eml_dir)
+            .map_err(|e| raise_error!(format!("{:#?}", e), ErrorCode::InternalError))?;
+        stat.index_usage_bytes = get_total_size(&DATA_DIR_MANAGER.envelope_dir)
+            .map_err(|e| raise_error!(format!("{:#?}", e), ErrorCode::InternalError))?;
+        Ok(stat)
+    }
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize, Object)]
+pub struct TimeBucket {
+    pub timestamp_ms: i64, // Timestamp in milliseconds
+    pub count: u64,        // Number of emails in this time bucket
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize, Object)]
+pub struct Group {
+    pub key: String,
+    pub count: u64, // Number of emails from this sender
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize, Object)]
+pub struct LargestEmail {
+    pub subject: String, // Email subject
+    pub size_bytes: u64, // Email size in bytes
+}
+
+impl LargestEmail {
+    pub fn from_tantivy_doc(document: &TantivyDocument) -> BichonResult<Self> {
+        let fields = SchemaTools::envelope_fields();
+        let value = document.get_first(fields.f_size).ok_or_else(|| {
+            raise_error!(
+                "miss 'size' field in tantivy document".into(),
+                ErrorCode::InternalError
+            )
+        })?;
+        let size_bytes = value.as_u64().ok_or_else(|| {
+            raise_error!("'size' field is not a u64".into(), ErrorCode::InternalError)
+        })?;
+        let value = document.get_first(fields.f_subject).ok_or_else(|| {
+            raise_error!("'subject' field not found".into(), ErrorCode::InternalError)
+        })?;
+        let subject = value.as_str().map(|s| s.to_string()).ok_or_else(|| {
+            raise_error!(
+                "'subject' field is not a string".into(),
+                ErrorCode::InternalError
+            )
+        })?;
+        let envelope = LargestEmail {
+            subject,
+            size_bytes,
+        };
+        Ok(envelope)
+    }
+}
